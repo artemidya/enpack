@@ -1,1 +1,90 @@
-# enpack
+# DirectEnpack — диагностика совместимости с CorelDRAW 27
+
+Цель: сохранить поведение оригинального прямоугольного раскроя в **CorelDRAW Graphics Suite 2026 27.2.0.135, Windows 10 Pro x64**.
+
+## Результат на текущем этапе
+
+Подготовлена **диагностическая сборка 1**, а не подтверждённый рабочий релиз:
+
+- [`deliverables/DirectEnpack-27-diagnostic-1.zip`](deliverables/DirectEnpack-27-diagnostic-1.zip) — плагин x64, инструкция, лицензия и SHA-256.
+- [Установка, получение журнала и откат](docs/INSTALL-RU.md).
+- [Проверенные факты и ограничения](docs/INVESTIGATION.md).
+
+**Причина отсутствия кнопки на компьютере пользователя пока не установлена. Проверка в установленном CorelDRAW обязательна.** Здесь доступна Linux-среда без CorelDRAW.
+
+## Что установлено
+
+Файлы пользователя получены из [artemidya/enpack](https://github.com/artemidya/enpack), commit `3466b53c2d60dea1aeab85fbbb0b3d9807bb5246`:
+
+- `DirectEnpackx64.cpg`: 9216 байт, PE32+ AMD64 DLL, экспорт `AttachPlugin`.
+- `VGCoreAuto.tlb`: библиотека VGCore 27.2, SYS_WIN64.
+- Для **35** используемых оригиналом методов Corel/UI совпали позиции в таблицах виртуальных методов. Совпали три используемых DISPID событий. Это не проверка всех сигнатур и не доказательство успешной загрузки.
+- Оригинальные исходники и диагностическая версия успешно собираются FASM 1.73.35.
+- Диагностическая версия прошла **14 эмулированных сценариев запуска** с подменёнными WinAPI/COM. Это не тесты в Windows/CorelDRAW и не тесты раскроя.
+- Алгоритм раскроя, диалог и обработчики событий совпадают с исходником; таблицы интерфейсов и иконки также не менялись.
+
+Прикреплённый пользователем `DirectEnpack-diagnostics.txt` не оказался доступен в рабочей файловой системе; на момент подготовки сборки его содержимое не анализировалось.
+
+## Изменения диагностической версии
+
+- Журнал `%TEMP%\DirectEnpack-27.log` начиная с `AttachPlugin`, с этапами запуска и HRESULT.
+- Проверки HRESULT и нулевых указателей в загрузке/создании кнопки.
+- Запасная временная панель DirectEnpack, если Standard отсутствует или скрыта.
+- Безопасная обработка пустой панели: без вызова `Controls.Item(0)`.
+- Раздельные 32-битные поля для номера основной и дополнительной версии вместо перекрывающихся записей.
+- Освобождение строк BSTR и интерфейсов, снятие подписки/регистрации команды при ошибке и завершении.
+- Ошибка сохранения/назначения иконки не мешает завершить создание кнопки.
+
+Остальные части оригинала не перерабатывались. В частности, это не исправление всех возможных ошибок потоков, COM и раскроя.
+
+## Структура
+
+- `upstream/` — точная копия [fersatgit/DirectEnpack](https://github.com/fersatgit/DirectEnpack), commit `fd88547ffb69fcd8f0bc84441bd589414f918f25`. Все 12 файлов сверены по Git blob SHA.
+- `src/` — адаптируемые исходники x64, исходная кодировка `.asm`/`Resources.inc` — Windows-1251. `Startup27.inc` содержит ASCII.
+- `tools/` — сборка, проверка метаданных, тесты и пользовательская диагностика PowerShell.
+- `docs/abi-*.md` — отчёты сравнения с предоставленной библиотекой 27.2.
+- `reference/`, `.tools/`, `build/` — локальные входные данные, инструменты и промежуточная сборка; исключены из Git.
+- `deliverables/` — небольшой архив для тестирования пользователем; намеренно включён как результат работы.
+
+Лицензия исходного проекта — Unlicense: [`upstream/LICENSE`](upstream/LICENSE).
+
+## Сборка на Linux x86_64
+
+Нужны Python 3, curl, tar и поддержка запуска 32-битного Linux ELF для bootstrap-компилятора.
+
+```bash
+bash tools/bootstrap-fasm.sh
+python3 tools/build.py
+```
+
+Bootstrap закрепляет коммиты исходников FASM и include-файлов, проверяет SHA-256 bootstrap-бинарника и собирает FASM 1.73.35 из исходников. Загружаемые инструменты остаются в `.tools/`, не попадают в плагин или Git. PE-заголовок содержит время сборки, поэтому побайтовый хеш двух повторных сборок может различаться.
+
+Оригинал для сравнения:
+
+```bash
+python3 tools/build.py --upstream --output build/Original-rebuilt.cpg
+```
+
+На Windows с установленным Python 3 и FASM 1.73.35:
+
+```powershell
+python tools/build.py --fasm C:\fasm\FASM.EXE --include C:\fasm\INCLUDE
+```
+
+Сборка ничего не устанавливает в CorelDRAW. Результат: `build/DirectEnpackx64.cpg`.
+
+## Проверки
+
+```bash
+python3 tools/test_source.py
+# Поместить предоставленный пользователем VGCoreAuto.tlb в reference/:
+python3 tools/check_typelib.py reference/VGCoreAuto.tlb --source upstream/x64
+python3 tools/check_typelib.py reference/VGCoreAuto.tlb
+python3 -m venv .tools/venv
+.tools/venv/bin/pip install -r tools/requirements-test.txt
+.tools/venv/bin/python tools/test_startup_emulated.py build/DirectEnpackx64.cpg
+```
+
+`check_typelib.py` читает только метаданные MSFT SYS_WIN64 и не исполняет загруженный файл. `test_startup_emulated.py` исполняет машинный код загрузки в Unicorn с искусственными API, проверяя в том числе выравнивание стека, сохранение nonvolatile-регистров, баланс ссылок COM и освобождение BSTR. Поведение реального CorelDRAW этим не моделируется полностью.
+
+`tools/Collect-DirectEnpackDiagnostics.ps1` — дополнительная проверка установленного файла и загруженных модулей на компьютере пользователя. Настройки и документы не меняет, пишет только отчёт. Сам скрипт PowerShell ещё не проверялся исполнением на Windows в этой среде.

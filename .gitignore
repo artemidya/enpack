@@ -1,0 +1,5 @@
+.tools/
+reference/
+build/
+__pycache__/
+*.fas

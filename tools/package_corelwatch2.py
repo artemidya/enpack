@@ -13,5 +13,7 @@ with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as z:
  for name,data in sorted(files.items()):
   info=zipfile.ZipInfo(name,(2026,10,8,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o100644<<16;z.writestr(info,data)
 with zipfile.ZipFile(output) as z:assert z.testzip() is None
-(ROOT/'deliverables/CORELWATCH2-SHA256SUMS.txt').write_text(hashlib.sha256(output.read_bytes()).hexdigest()+'  '+output.name+'\n')
+versioned=ROOT/'deliverables/CorelWatch-2.0.1.zip'
+versioned.write_bytes(output.read_bytes())
+(ROOT/'deliverables/CORELWATCH2-SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in (output,versioned)))
 print(output,output.stat().st_size)

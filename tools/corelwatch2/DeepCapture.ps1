@@ -18,8 +18,8 @@ $target=$null
 try {
     $target=Get-Process -Id $TargetProcessId -ErrorAction Stop
     if ($target.StartTime.Ticks -ne $StartTicks) { throw 'PID reused; snapshot refused.' }
-    Add-Type -Path (Join-Path $PSScriptRoot 'NativeProbe.cs')
-    Add-Type -Path (Join-Path $PSScriptRoot 'CaptureProbe.cs')
+    Add-Type -LiteralPath (Join-Path $PSScriptRoot 'NativeProbe.cs')
+    Add-Type -LiteralPath (Join-Path $PSScriptRoot 'CaptureProbe.cs')
     $exe=$null; $version=$null
     try { $exe=$target.MainModule.FileName; $version=$target.MainModule.FileVersionInfo.FileVersion } catch { }
     Save 'process.json' ([ordered]@{time=(Get-Date).ToString('o'); process_id=$target.Id; start_ticks=$StartTicks; executable=$exe; file_version=$version; cpu_seconds=$target.TotalProcessorTime.TotalSeconds; private_bytes=$target.PrivateMemorySize64})

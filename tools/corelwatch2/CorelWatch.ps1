@@ -4,16 +4,27 @@ param(
     [ValidateRange(1,120)][int]$DurationMinutes = 20,
     [ValidateRange(1,30)][int]$IntervalSeconds = 2,
     [string]$Label = 'manual-test',
-    [string]$OutputRoot = (Join-Path $PSScriptRoot 'Reports'),
+    [string]$OutputRoot = '',
     [switch]$SelfTest
 )
 $ErrorActionPreference = 'Stop'
+# PS 5.1 may evaluate parameter defaults before PSScriptRoot is populated.
+# Resolve defaults AFTER binding, from this script's file, never from CMD's cwd.
+$scriptFile = $PSCommandPath
+if ([string]::IsNullOrWhiteSpace($scriptFile)) { $scriptFile = $MyInvocation.MyCommand.Path }
+if ([string]::IsNullOrWhiteSpace($scriptFile)) {
+    throw 'Cannot locate CorelWatch.ps1. Extract the full ZIP and run Start-CorelWatch.cmd.'
+}
+$ScriptDirectory = [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($scriptFile))
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path $ScriptDirectory 'Reports' }
+
 if (-not [Environment]::Is64BitProcess) { throw 'Use 64-bit Windows PowerShell.' }
-Add-Type -Path (Join-Path $PSScriptRoot 'NativeProbe.cs')
+Add-Type -LiteralPath (Join-Path $ScriptDirectory 'NativeProbe.cs')
 if ($SelfTest) {
     $self = Get-Process -Id $PID
     $probe = [CorelWatch.NativeProbe]::Sample([uint32]$self.Id, $self.MainWindowHandle.ToInt64())
     $probe | ConvertTo-Json -Depth 8
+    Write-Host ('Reports root: ' + $OutputRoot)
     Write-Host 'Native probe smoke test completed. This does not test CorelDRAW.'
     exit 0
 }
@@ -81,7 +92,7 @@ function Snapshot-Modules($Target, [string]$Reason) {
         $script:CaptureCount++
         $dir=Join-Path $report ('capture-{0:D2}-pid{1}' -f $script:CaptureCount,$Target.Id)
         $null=New-Item -ItemType Directory -Path $dir
-        $scriptPath=(Join-Path $PSScriptRoot 'DeepCapture.ps1').Replace("'","''")
+        $scriptPath=(Join-Path $ScriptDirectory 'DeepCapture.ps1').Replace("'","''")
         $escapedDir=$dir.Replace("'","''")
         $command="& '$scriptPath' -TargetProcessId $($Target.Id) -StartTicks $($Target.StartTime.Ticks) -OutputDirectory '$escapedDir'"
         $encoded=[Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
@@ -116,7 +127,7 @@ function Export-WindowsEvents {
 }
 
 @{
-    started=$sessionStart.ToString('o'); label=$Label; tool_version='2.0-hang-diagnostics'
+    started=$sessionStart.ToString('o'); label=$Label; tool_version='2.0.1-hang-diagnostics'; monitor_process_id=$PID
     interval_seconds=$IntervalSeconds; max_minutes=$DurationMinutes; max_jsonl_bytes=$maxBytes
     os=[Environment]::OSVersion.VersionString; processor_count=[Environment]::ProcessorCount
     powershell=$PSVersionTable.PSVersion.ToString(); native_probe_timeout_ms=150; helper_timeout_seconds=20; max_snapshots=8; max_snapshot_bytes=8MB
@@ -124,7 +135,7 @@ function Export-WindowsEvents {
     limits='Sampling only; not all Corel actions/errors. NoReply can mean busy; disabled main can mean a normal modal dialog.'
 } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $report 'session.json') -Encoding UTF8
 
-Write-Host 'CorelWatch 2: external CorelDRAW hang diagnostics.'
+Write-Host 'CorelWatch 2.0.1: external CorelDRAW hang diagnostics.'
 Write-Host ('Reports: ' + $report)
 Write-Host 'Keep this window open; minimize it while working in CorelDRAW.'
 Write-Host 'H = capture HANG now, M = marker, S = snapshot, Q = finish and create ZIP.'

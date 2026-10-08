@@ -37,6 +37,9 @@ jobs:
       - name: PowerShell 5.1 and Win32 smoke tests (no CorelDRAW)
         shell: powershell
         run: ./tools/test_corelwatch_windows.ps1
+      - name: CorelWatch 2.0.1 packaged CMD default-launch regression
+        shell: powershell
+        run: ./tools/test_corelwatch2_launcher_windows.ps1
       - name: CorelWatch 2 synthetic hang and wait-chain tests (no CorelDRAW)
         shell: powershell
         run: ./tools/test_corelwatch2_windows.ps1

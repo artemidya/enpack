@@ -1,0 +1,34 @@
+{
+  "source": "New_export-DirectEnpack.cdws",
+  "output": "New_export-DirectEnpack-SmartDepart.cdws",
+  "source_sha256": "ac65dc5d26ecfab37f9f16b1adf809538ddff5f35e1a4ac6169afa95f1fb633b",
+  "output_sha256": "5158c66b698d3dbde1962993b95893f78a77865e0fb200a91712bb2bc2ba3fc5",
+  "source_members": {
+    "mimetype": "049cf7b00798e07b44c40a3c279451924ed66e362b5b219744e4812ea1b6065b",
+    "content/exportsettings.xml": "309fd372d44b5a369ec0e578ee30d85c940565bfa23f1c2249751599eb9fe7d7",
+    "META-INF/metadata.xml": "a742923d659ce5acfeb2493d7caa7ea33ed70f71d3cf8930f2a7c6f2603d60b3",
+    "META-INF/links.xml": "82fa176d3135d85af874dbf34339848dd8f82fc0bccbfb3d20f1ffd1bb07641a",
+    "META-INF/container.xml": "762b5c391e858ae4ddaa17816af632a86a4078c13c73ef9f4060bb0d530102d5",
+    "content/cmyk.cdt": "76b545d2b223a05575795f8ad4a5153f0e9444452cb9146e1ac2b2e2d51c6a7a",
+    "content/settings.ini": "dd800aba279317fa4f66fe85786cde6a770b1614b19991fbd07d4efebf30c52c",
+    "content/workspace.xml": "1c5ae899a3428b967b024f874651812a9f788a17b4659e4838f8206ec98648cb",
+    "previews/thumbnail.jpg": "094a0de85f447c763aa5936f44c6d1b350588477fe35f87f355d134582befba1",
+    "content/icons/b05da318-a34d-5236-a33a-46e2c5b76ea2.ico": "c079d4b1c1f6be6c468e236a516355158978201ff6beddae1d1b3da241a011c7"
+  },
+  "added_icons": {
+    "content/icons/4019c811-1e6b-5e1a-b20c-e730e6e8d129.ico": "fcf91077dc6813114da112bf350ce7aad0a300200b69f7f034070d0d5a49b902",
+    "content/icons/51bed82a-497c-547a-b959-27368c2b2f89.ico": "1158715587f747ee97cfb1730274c92cd2caff5c41ffbc2a1085dcfb56e334d5",
+    "content/icons/8fb0080e-5067-59be-925f-3f076bdd58d3.ico": "28e7fb97eb584025a671391e68d8bee1aa7a098d8a6131d80fcab0f1dbc72f1e",
+    "content/icons/ac34dbf9-54a3-575e-9d08-544ca6e74d33.ico": "0c236628afaccbb94e3a054da15a7e80e2542b2681d1e251a830a7492d18a1c4"
+  },
+  "changes": "three XML insertions; DirectEnpack, menus, settings and Addons preserved",
+  "datasource": "SmartDepart",
+  "method_paths": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "tolerance_path": "4",
+  "runtime_tested_in_coreldraw": false
+}

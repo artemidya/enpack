@@ -1,6 +1,18 @@
-# DirectEnpack — диагностика совместимости с CorelDRAW 27
+# DirectEnpack и SmartDepart — CorelDRAW Technical Suite 27
 
-Цель: сохранить поведение оригинального прямоугольного раскроя в **CorelDRAW Graphics Suite 2026 27.2.0.135, Windows 10 Pro x64**.
+Цель: сохранить функции оригинальных аддонов в **CorelDRAW Technical Suite 27 x64, Windows 10 Pro**. Для проверки интерфейсов предоставлена библиотека VGCore 27.2.
+
+## SmartDepart — новый комплект рядом с работающим DirectEnpack
+
+Пользователь подтвердил успешную установку DirectEnpack с последним New_export-комплектом. На основе того же CDWS подготовлен **[SmartDepart-27.zip](deliverables/SmartDepart-27.zip)**: новый `SmartDepart.cpg`, пространство **[New_export-DirectEnpack-SmartDepart.cdws](deliverables/New_export-DirectEnpack-SmartDepart.cdws)**, оригинальные и адаптированные исходники.
+
+**Работающий DirectEnpack не заменяется.** На Standard добавлено выпадающее меню SmartDepart: умное деление, резка струной, триангуляция, декомпозиция и погрешность линеаризации. Используются авторские привязки к источнику данных SmartDepart, а не фиктивные AddPluginCommand/VBA-команды. Сброс панели свойств и установка AppUI.xslt не нужны для этого варианта интеграции.
+
+- [Установка, проверки и откат](docs/SMARTDEPART-RU.md).
+- [Сохранение рабочего пространства](docs/smartdepart-workspace-manifest.json).
+- [28 методов Corel/UI: проверка vtable по VGCore 27.2](docs/smartdepart-abi-27.2.md).
+
+Алгоритмы SmartDepart не менялись. Исправлен только lifecycle x64 (ABI RBX, запись версии, проверки/освобождение интерфейсов). CPU: SSE4.2 + POPCNT. **Операции внутри CorelDRAW ещё не проверены**; тестировать на копиях, начиная с отдельного рабочего пространства и сохранив текущий профиль. В ZIP копировать в Addons только `plugin/SmartDepart.cpg`, не папки исходников/XSLT. Предыдущую установку SmartDepart, если она есть, сначала сохранить вне Addons, чтобы не загружать две копии.
 
 ## Текущий комплект — интеграция в New_export.cdws
 

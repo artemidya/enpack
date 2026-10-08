@@ -19,7 +19,10 @@ function Launch-Cmd([string]$Arguments) {
     $script:testNumber++
     $launcher=Join-Path $install 'Start-CorelWatch.cmd'
     $commandLine='/d /s /c ""'+$launcher+'" '+$Arguments+' <nul"'
-    return Start-Process -FilePath $env:ComSpec -ArgumentList $commandLine -WorkingDirectory (Join-Path $env:SystemRoot 'System32') -PassThru -RedirectStandardOutput (Join-Path $out "stdout-$script:testNumber.txt") -RedirectStandardError (Join-Path $out "stderr-$script:testNumber.txt")
+    $process=Start-Process -FilePath $env:ComSpec -ArgumentList $commandLine -WorkingDirectory (Join-Path $env:SystemRoot 'System32') -PassThru -RedirectStandardOutput (Join-Path $out "stdout-$script:testNumber.txt") -RedirectStandardError (Join-Path $out "stderr-$script:testNumber.txt")
+    # PS 5.1 Start-Process can otherwise lose ExitCode after WaitForExit.
+    $null=$process.Handle
+    return $process
 }
 function Finish-Cmd($Process,[int]$ExpectedCode) {
     try {

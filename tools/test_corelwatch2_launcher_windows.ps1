@@ -6,7 +6,10 @@ $out=Join-Path $env:TEMP ('CorelWatch-Launcher-'+[Guid]::NewGuid().ToString('N')
 # Unicode + spaces + apostrophe + brackets catch quoting/literal-path regressions.
 $install=Join-Path $out (([string][char]0x0416)+" monitor's [folder]")
 $null=New-Item -ItemType Directory -Path $install -Force
-Expand-Archive -LiteralPath (Join-Path $root 'deliverables/CorelWatch-2.0.1.zip') -DestinationPath $install
+# PS 5.1 Expand-Archive treats brackets in DestinationPath as wildcards.
+# Extract through .NET so this test exercises OUR launcher, not that OS module bug.
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[IO.Compression.ZipFile]::ExtractToDirectory((Join-Path $root 'deliverables/CorelWatch-2.0.1.zip'),$install)
 foreach ($line in Get-Content -LiteralPath (Join-Path $install 'SHA256SUMS.txt')) {
     $parts=$line -split '  ',2
     if ((Get-FileHash -LiteralPath (Join-Path $install $parts[1]) -Algorithm SHA256).Hash -ne $parts[0]) { throw 'Packaged checksum mismatch' }

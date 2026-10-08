@@ -4,7 +4,7 @@ $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 $out=Join-Path $env:TEMP ('CorelWatch-Launcher-'+[Guid]::NewGuid().ToString('N'))
 # Unicode + spaces + apostrophe + brackets catch quoting/literal-path regressions.
-$install=Join-Path $out (([char]0x0416)+" monitor's [folder]")
+$install=Join-Path $out (([string][char]0x0416)+" monitor's [folder]")
 $null=New-Item -ItemType Directory -Path $install -Force
 Expand-Archive -LiteralPath (Join-Path $root 'deliverables/CorelWatch-2.0.1.zip') -DestinationPath $install
 foreach ($line in Get-Content -LiteralPath (Join-Path $install 'SHA256SUMS.txt')) {

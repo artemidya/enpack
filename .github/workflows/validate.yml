@@ -37,9 +37,21 @@ jobs:
       - name: PowerShell 5.1 and Win32 smoke tests (no CorelDRAW)
         shell: powershell
         run: ./tools/test_corelwatch_windows.ps1
-      - name: CorelWatch 2.0.1 packaged CMD default-launch regression
-        shell: powershell
-        run: ./tools/test_corelwatch2_launcher_windows.ps1
       - name: CorelWatch 2 synthetic hang and wait-chain tests (no CorelDRAW)
         shell: powershell
         run: ./tools/test_corelwatch2_windows.ps1
+  packaged-launcher:
+    runs-on: windows-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: CorelWatch 2.0.1 packaged CMD default-launch regression
+        shell: powershell
+        run: |
+          try {
+            ./tools/test_corelwatch2_launcher_windows.ps1
+          } catch {
+            $detail = (($_ | Out-String) + $_.ScriptStackTrace).Replace('%','%25').Replace("`r",'%0D').Replace("`n",'%0A')
+            Write-Host "::error::$detail"
+            exit 1
+          }

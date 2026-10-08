@@ -1,0 +1,11 @@
+{
+  "size": 557,
+  "wholeSize": 172,
+  "planes": 32,
+  "platformData": 216,
+  "advanceState": 280,
+  "inData": 88,
+  "outData": 100,
+  "inRowBytes": 96,
+  "outRowBytes": 108
+}

@@ -3,3 +3,7 @@ reference/
 build/
 __pycache__/
 *.fas
+
+# Upstream WEBP4CDR proprietary toolchain/static archives are not redistributed.
+vendor/WEBP4CDR/link/
+vendor/WEBP4CDR/*/lib/

@@ -1,0 +1,39 @@
+name: Raster add-ons Windows tests
+on:
+  push:
+    branches: ['arena/4cf01c57-enpack']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r tools/requirements-test.txt
+      - name: Execute delivered FASM binaries with mocked host
+        run: python tools/test_raster_emulated.py deliverables
+      - name: Independent MSVC x64 build of WebP adapter and native fake-host tests
+        run: |
+          cmake -S src/webp4cdr -B build/native -A x64 -DADDON_TESTS=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build build/native --config Release --target WEBP4CDRx64 webp27_tests -j 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Native Win32/OLE/WIC tests and actual delivered-binary loader test
+        run: |
+          & ./build/native/Release/webp27_tests.exe "$pwd/tests/raster" "$pwd/deliverables"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test independently rebuilt MSVC binary too
+        run: |
+          Copy-Item deliverables/Bleedsx64.cpg build/native/Release/
+          Copy-Item deliverables/SC_x64.8bf build/native/Release/
+          & ./build/native/Release/webp27_tests.exe "$pwd/tests/raster" "$pwd/build/native/Release"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MSVC-cross-check-not-the-user-package
+          path: build/native/Release/WEBP4CDRx64.cpg

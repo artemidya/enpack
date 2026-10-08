@@ -15,6 +15,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r tools/requirements-test.txt
+      - name: Workspace, source and package regression tests
+        run: python tools/test_raster.py
       - name: Execute delivered FASM binaries with mocked host
         run: python tools/test_raster_emulated.py deliverables
       - name: Independent MSVC x64 build of WebP adapter and native fake-host tests

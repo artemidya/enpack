@@ -1,4 +1,4 @@
 
 # Preserve the CP1251 assembly sources as bytes on Windows checkouts.
-*.asm -text
-*.inc -text
+*.asm -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.inc -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

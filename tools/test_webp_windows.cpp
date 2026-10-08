@@ -28,8 +28,17 @@ struct NativeTarget final:IDropTarget {
  HRESULT STDMETHODCALLTYPE DragLeave() override{++leaves;return S_OK;}
  HRESULT STDMETHODCALLTYPE Drop(IDataObject* o,DWORD,POINTL p,DWORD* effect) override{++drops;position=p;CHECK(filesFrom(o,received));*effect=DROPEFFECT_COPY;return S_OK;}
 };
+struct Window final:IDispatch {
+ ULONG refs=1;HWND window;explicit Window(HWND h):window(h){}
+ HRESULT STDMETHODCALLTYPE QueryInterface(REFIID id,void** p) override {if(!p)return E_POINTER;*p=nullptr;if(id==IID_IUnknown||id==IID_IDispatch){*p=this;AddRef();return S_OK;}return E_NOINTERFACE;}
+ ULONG STDMETHODCALLTYPE AddRef() override{return ++refs;}ULONG STDMETHODCALLTYPE Release() override{auto n=--refs;if(!n)delete this;return n;}
+ HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT* p) override{*p=0;return S_OK;}
+ HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT,LCID,ITypeInfo**) override{return E_NOTIMPL;}
+ HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID,LPOLESTR* n,UINT,LCID,DISPID* id) override {if(wcscmp(*n,L"Handle"))return DISP_E_UNKNOWNNAME;*id=1;return S_OK;}
+ HRESULT STDMETHODCALLTYPE Invoke(DISPID id,REFIID,LCID,WORD,DISPPARAMS*,VARIANT* v,EXCEPINFO*,UINT*) override {if(id!=1)return E_FAIL;v->vt=VT_I4;v->lVal=LONG(reinterpret_cast<UINT_PTR>(window));return S_OK;}
+};
 struct App final:IDispatch {
- ULONG refs=1;int subscriptions=0;
+ ULONG refs=1;int subscriptions=0;HWND window=nullptr;
  HRESULT STDMETHODCALLTYPE QueryInterface(REFIID id,void** p) override {if(!p)return E_POINTER;*p=nullptr;if(id==IID_IUnknown||id==IID_IDispatch){*p=this;AddRef();return S_OK;}return E_NOINTERFACE;}
  ULONG STDMETHODCALLTYPE AddRef() override{return ++refs;}ULONG STDMETHODCALLTYPE Release() override{return --refs;}
  HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT* p) override{*p=0;return S_OK;}
@@ -38,7 +47,7 @@ struct App final:IDispatch {
   if(!wcscmp(*n,L"AdviseEvents"))*id=1;else if(!wcscmp(*n,L"UnadviseEvents"))*id=2;else if(!wcscmp(*n,L"Windows"))*id=3;else if(!wcscmp(*n,L"ActiveWindow"))*id=4;else return DISP_E_UNKNOWNNAME;return S_OK;}
  HRESULT STDMETHODCALLTYPE Invoke(DISPID id,REFIID,LCID,WORD,DISPPARAMS* dp,VARIANT* v,EXCEPINFO*,UINT*) override {
   if(id==1){CHECK(dp->cArgs==1&&dp->rgvarg[0].vt==VT_DISPATCH);void* sink=nullptr;CHECK(SUCCEEDED(dp->rgvarg[0].pdispVal->QueryInterface(EventsIID,&sink)));static_cast<IDispatch*>(sink)->Release();++subscriptions;v->vt=VT_I4;v->lVal=17;return S_OK;}
-  if(id==2){CHECK(dp->rgvarg[0].lVal==17);--subscriptions;return S_OK;}return E_FAIL;
+  if(id==2){CHECK(dp->rgvarg[0].lVal==17);--subscriptions;return S_OK;}if(id==4&&window){v->vt=VT_DISPATCH;v->pdispVal=new Window(window);return S_OK;}return E_FAIL;
  }
 };
 void checkPng(const std::wstring& path){
@@ -50,13 +59,20 @@ void checkPng(const std::wstring& path){
  BYTE pixels[64]{};CHECK(SUCCEEDED(converter->CopyPixels(nullptr,16,64,pixels)));CHECK(pixels[0]==20&&pixels[1]==40&&pixels[2]==200&&pixels[3]==96);
  CHECK(pixels[4]==200&&pixels[5]==40&&pixels[6]==20&&pixels[7]==255);
 }
-void loadedSmoke(const wchar_t* file,bool webp){
+void loadedSmoke(const wchar_t* file,bool webp,const std::wstring& fixtures){
  HMODULE dll=LoadLibraryW(file);if(!dll)fprintf(stderr,"LoadLibrary error %lu\n",GetLastError());CHECK(dll);
  auto attach=reinterpret_cast<int(WINAPI*)(void**)>(GetProcAddress(dll,"AttachPlugin"));CHECK(attach);CHECK(attach(nullptr)==0);
  VGPlugin* p=nullptr;CHECK(attach(reinterpret_cast<void**>(&p))==256&&p);UINT count=99;CHECK(p->GetTypeInfoCount(&count)==S_OK&&count==0);
  CHECK(p->OnLoad(nullptr)==E_POINTER);CHECK(FAILED(p->StartSession()));CHECK(p->StopSession()==S_OK);CHECK(p->OnUnload()==S_OK);
- if(webp){auto version=reinterpret_cast<int(WINAPI*)()>(GetProcAddress(dll,"DecoderVersion"));CHECK(version&&version()==0x010600);App app;CHECK(p->OnLoad(&app)==S_OK);CHECK(p->StartSession()==S_OK);CHECK(app.subscriptions==1);
-  CHECK(p->Invoke(1,IID_NULL,0,DISPATCH_METHOD,nullptr,nullptr,nullptr,nullptr)==S_OK);CHECK(p->StopSession()==S_OK);CHECK(p->OnUnload()==S_OK);CHECK(app.refs==1&&app.subscriptions==0);}
+ if(webp){auto version=reinterpret_cast<int(WINAPI*)()>(GetProcAddress(dll,"DecoderVersion"));CHECK(version&&version()==0x010600);App app;
+  HWND window=CreateWindowW(L"STATIC",L"Delivered binary",WS_OVERLAPPEDWINDOW,0,0,80,80,nullptr,nullptr,nullptr,nullptr);CHECK(window);auto* native=new NativeTarget;CHECK(RegisterDragDrop(window,native)==S_OK);app.window=window;
+  CHECK(p->OnLoad(&app)==S_OK);CHECK(p->StartSession()==S_OK);CHECK(app.subscriptions==1);
+  auto* installed=static_cast<IDropTarget*>(GetPropW(window,L"OleDropTargetInterface"));CHECK(installed&&installed!=static_cast<IDropTarget*>(native));
+  IDataObject* files=data({fixtures+L"\\alpha.webp"});DWORD effect=1;POINTL point{20,30};CHECK(installed->DragEnter(files,0,point,&effect)==S_OK&&effect==1);CHECK(native->received.size()==1);auto png=native->received[0];checkPng(png);
+  CHECK(installed->Drop(files,0,point,&effect)==S_OK&&native->drops==1);files->Release();
+  CHECK(p->Invoke(1,IID_NULL,0,DISPATCH_METHOD,nullptr,nullptr,nullptr,nullptr)==S_OK);CHECK(p->StopSession()==S_OK);CHECK(p->OnUnload()==S_OK);CHECK(app.refs==1&&app.subscriptions==0);
+  CHECK(GetPropW(window,L"OleDropTargetInterface")==static_cast<IDropTarget*>(native));RevokeDragDrop(window);DestroyWindow(window);CHECK(native->refs==1);native->Release();
+  DeleteFileW(png.c_str());RemoveDirectoryW(png.substr(0,png.find_last_of(L"\\")).c_str());}
  FreeLibrary(dll);
 }
 void filterSmoke(const wchar_t* file){HMODULE dll=LoadLibraryW(file);CHECK(dll);auto entry=reinterpret_cast<void(WINAPI*)(short,void*,void*,short*)>(GetProcAddress(dll,"S"));CHECK(entry);
@@ -65,7 +81,7 @@ LRESULT CALLBACK workerWnd(HWND h,UINT m,WPARAM w,LPARAM l){if(m==WM_CLOSE){Revo
 int wmain(int argc,wchar_t** argv){
  CHECK(argc==3);CHECK(SUCCEEDED(OleInitialize(nullptr)));moduleHandle=GetModuleHandleW(nullptr);
  std::wstring fixtures=argv[1],deliverables=argv[2];
- loadedSmoke((deliverables+L"\\WEBP4CDRx64.cpg").c_str(),true);loadedSmoke((deliverables+L"\\Bleedsx64.cpg").c_str(),false);filterSmoke((deliverables+L"\\SC_x64.8bf").c_str());
+ loadedSmoke((deliverables+L"\\WEBP4CDRx64.cpg").c_str(),true,fixtures);loadedSmoke((deliverables+L"\\Bleedsx64.cpg").c_str(),false,fixtures);filterSmoke((deliverables+L"\\SC_x64.8bf").c_str());
  App app;CHECK(plugin.OnLoad(&app)==S_OK);CHECK(plugin.StartSession()==S_OK);CHECK(plugin.Invoke(6,IID_NULL,0,DISPATCH_METHOD,nullptr,nullptr,nullptr,nullptr)==S_OK);CHECK(app.subscriptions==1);
  auto* native=new NativeTarget;auto* proxy=new Target(nullptr,native);
  auto* input=data({fixtures+L"\\alpha.webp",L"C:\\unchanged.png"});DWORD effect=DROPEFFECT_COPY;POINTL point{123,456};

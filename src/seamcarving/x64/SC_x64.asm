@@ -887,7 +887,18 @@ proc DialogProc uses rbx rdi rsi rbp,wnd,msg,wParam,lParam
                                 align 8
                                 .jmptable dq .Aplpy,.Ok,.Transpose,.Animate
                                     .IgnoreCommand:ret
-                                    .Aplpy:mov [CancelRequested],0
+                                    .Aplpy:mov eax,[transposed]
+                                           mov edx,[input.Width+rax*4]
+                                           dec edx
+                                           mov eax,[NewSize]
+                                           cmp eax,3
+                                           jge @f
+                                             mov eax,3
+                                           @@:cmp eax,edx
+                                           jbe @f
+                                             mov eax,edx
+                                           @@:mov [NewSize],eax
+                                           mov [CancelRequested],0
                                            xor    ebx,ebx
                                            call   EnableControls
                                            invoke SendMessageW,[hwnds.AnimationCheckBox],BM_GETCHECK,0,0
@@ -1088,6 +1099,16 @@ proc FilterEntry uses rbx rsi rdi rbp,selector,FilterRecordPtr,data,result
                             jb .BadRecord
                             cmp eax,4
                             ja .BadRecord
+                            cmp word[rbp+FilterRecord.imageMode],3
+                            je .CheckRGB
+                            cmp word[rbp+FilterRecord.imageMode],4
+                            jne .BadRecord
+                            cmp eax,4
+                            jne .BadRecord
+                            jmp .ModeOK
+                            .CheckRGB:cmp eax,3
+                            jne .BadRecord
+                            .ModeOK:
                             movzx eax,[rbp+FilterRecord.wholeSize.h]
                             movzx ecx,[rbp+FilterRecord.wholeSize.v]
                             cmp eax,16384
@@ -1244,9 +1265,13 @@ proc FilterEntry uses rbx rsi rdi rbp,selector,FilterRecordPtr,data,result
                               cominvk  CorelApp,Get_ActiveSelectionRange,Selection
                               test eax,eax
                               js .BadCorel
+                              cmp [Selection],0
+                              je .BadCorel
                               cominvk  Selection,Get_FirstShape,Shape
                               test eax,eax
                               js .BadCorel
+                              cmp [Shape],0
+                              je .BadCorel
                               cominvk  Shape,GetSize,ShapeSize.Width,ShapeSize.Height
                               test eax,eax
                               js .BadCorel
@@ -1283,6 +1308,8 @@ proc FilterEntry uses rbx rsi rdi rbp,selector,FilterRecordPtr,data,result
                               test     eax,eax
                               je @f
                                 cominvk  Shape,GetPosition,ShapePos.X,ShapePos.Y
+                                test eax,eax
+                                js .BadCorel
                                 movapd   xmm0,[ShapeSize]
                                 cvtpi2pd xmm1,qword[input.Width]
                                 cvtpi2pd xmm2,qword[output.Width]
@@ -1290,16 +1317,37 @@ proc FilterEntry uses rbx rsi rdi rbp,selector,FilterRecordPtr,data,result
                                 divpd    xmm1,xmm2
                                 movhlps  xmm2,xmm1
                                 cominvk  Shape,SetSize,float xmm1,float xmm2
+                                test eax,eax
+                                js .BadCorel
                                 cominvk  CorelApp,Get_ActiveLayer,Layer
+                                test eax,eax
+                                js .BadCorel
                                 movsd    xmm2,[ShapePos.Y]
                                 subsd    xmm2,[ShapeSize.Height]
+                                cmp [Layer],0
+                                je .BadCorel
                                 cominvk  Layer,CreateRectangle2,float[ShapePos.X],float xmm2,float[ShapeSize.Width],float[ShapeSize.Height],0,0,0,0,Rectangle
+                                test eax,eax
+                                js .BadCorel
+                                cmp [Rectangle],0
+                                je .BadCorel
                                 cominvk  Rectangle,Get_Outline,Outline
+                                test eax,eax
+                                js .BadCorel
+                                cmp [Outline],0
+                                je .BadCorel
                                 cominvk  Outline,SetNoOutline
+                                test eax,eax
+                                js .BadCorel
                                 cominvk  Shape,AddToPowerClip,[Rectangle],0
+                                test eax,eax
+                                js .BadCorel
                                 cominvk  Outline,Release
+                                mov [Outline],0
                                 cominvk  Rectangle,Release
+                                mov [Rectangle],0
                                 cominvk  Layer,Release
+                                mov [Layer],0
                               @@:
                               call ReleaseCorel27
                               jmp .exit
@@ -1339,6 +1387,7 @@ proc FilterEntry uses rbx rsi rdi rbp,selector,FilterRecordPtr,data,result
                             mov  rax,errCPUNotSupported
                             cmp  ecx,110000010001000001000000011b
                             je @f
+                            jmp .filterError
                  .BadRecord:mov rax,errBounds27
                             jmp .filterError
                   .BadCorel:mov rax,errSecondInstance
@@ -1360,6 +1409,21 @@ proc FilterEntry uses rbx rsi rdi rbp,selector,FilterRecordPtr,data,result
 endp
 
 proc ReleaseCorel27
+  cmp [Outline],0
+  je @f
+    cominvk Outline,Release
+    mov [Outline],0
+  @@:
+  cmp [Rectangle],0
+  je @f
+    cominvk Rectangle,Release
+    mov [Rectangle],0
+  @@:
+  cmp [Layer],0
+  je @f
+    cominvk Layer,Release
+    mov [Layer],0
+  @@:
   cmp [Selection],0
   je @f
     cominvk Selection,Release

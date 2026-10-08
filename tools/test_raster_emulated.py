@@ -64,7 +64,7 @@ class SeamHost(RasterHost):
   self.call(entry,0,0,0,0)
   layout=json.loads((ROOT/'tests/raster/filter-layout.json').read_text());record=self.alloc(layout['size']);platform=self.alloc(8);self.out(platform,123)
   self.out(record+layout['platformData'],platform);self.out(record+layout['advanceState'],self.stub(lambda _:1))
-  self.out(record+layout['wholeSize'],(4<<16)|4,4);self.out(record+layout['planes'],3,2)
+  self.out(record+layout['wholeSize'],(4<<16)|4,4);self.out(record+layout['planes'],3,2);self.out(record+layout['imageMode'],3,2)
   self.call(entry,2,record,0,out);assert self.uc.mem_read(out,2)==b'\0\0'
   # Bad dimensions, channel count, and failed advanceState: reject before allocation/COM.
   for width,height,planes in [(3,4,3),(4,3,3),(16385,4,3),(4096,4096,3),(4,4,2),(4,4,5),(4,4,3)]:

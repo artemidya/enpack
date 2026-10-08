@@ -25,7 +25,7 @@ s=replace(s,'invoke EnableWindow,dword[rdi+rsi*8],ebx','invoke EnableWindow,qwor
 s=replace(s,'.WM_DESTROY:invoke wglDeleteContext,[RC]\n                  invoke DeleteDC,[DC]', '.WM_DESTROY:invoke wglMakeCurrent,0,0\n                  invoke wglDeleteContext,[RC]\n                  invoke ReleaseDC,[hwnds.DrawArea],[DC]')
 s=replace(s,'  cmp edx,WM_CLOSE\n  je .WM_CLOSE','  cmp edx,WM_APP+27\n  je .WorkerDone\n  cmp edx,WM_CLOSE\n  je .WM_CLOSE')
 s=replace(s,'.BN_CLICKED:movzx r8,r8w\n                                jmp', '.BN_CLICKED:movzx r8,r8w\n                                cmp r8d,3\n                                jb .IgnoreCommand\n                                cmp r8d,6\n                                ja .IgnoreCommand\n                                cmp [CarvingThread],0\n                                jne .IgnoreCommand\n                                jmp')
-s=replace(s,'.Aplpy:xor    ebx,ebx','.IgnoreCommand:ret\n                                    .Aplpy:mov [CancelRequested],0\n                                           xor    ebx,ebx')
+s=replace(s,'.Aplpy:xor    ebx,ebx','.IgnoreCommand:ret\n                                    .Aplpy:mov eax,[transposed]\n                                           mov edx,[input.Width+rax*4]\n                                           dec edx\n                                           mov eax,[NewSize]\n                                           cmp eax,3\n                                           jge @f\n                                             mov eax,3\n                                           @@:cmp eax,edx\n                                           jbe @f\n                                             mov eax,edx\n                                           @@:mov [NewSize],eax\n                                           mov [CancelRequested],0\n                                           xor    ebx,ebx')
 s=replace(s,'invoke CreateThread,0,4096,SeamCarving,eax,0,0','invoke CreateThread,0,0,SeamCarving,eax,0,0')
 s=replace(s,'mov    [CarvingThread],rax\n                                           ret','mov    [CarvingThread],rax\n                                           test rax,rax\n                                           jne @f\n                                             mov ebx,1\n                                             call EnableControls\n                                           @@:ret')
 s=replace(s,'.WM_CLOSE:invoke EndDialog,rcx,0\n                    invoke TerminateThread,[CarvingThread],0\n                    ret', '''.WM_CLOSE:cmp [CarvingThread],0
@@ -75,6 +75,16 @@ s=replace(s,'.filterSelectorStart:movd', '''.filterSelectorStart:cmp [CarvingDat
                             jb .BadRecord
                             cmp eax,4
                             ja .BadRecord
+                            cmp word[rbp+FilterRecord.imageMode],3
+                            je .CheckRGB
+                            cmp word[rbp+FilterRecord.imageMode],4
+                            jne .BadRecord
+                            cmp eax,4
+                            jne .BadRecord
+                            jmp .ModeOK
+                            .CheckRGB:cmp eax,3
+                            jne .BadRecord
+                            .ModeOK:
                             movzx eax,[rbp+FilterRecord.wholeSize.h]
                             movzx ecx,[rbp+FilterRecord.wholeSize.v]
                             cmp eax,16384
@@ -164,6 +174,8 @@ s=replace(s,'                              cominvk  AppWindow,Release\n         
                               jne .BadCorel''')
 for call in ['cominvk  CorelApp,Get_ActiveSelectionRange,Selection','cominvk  Selection,Get_FirstShape,Shape','cominvk  Shape,GetSize,ShapeSize.Width,ShapeSize.Height','cominvk  Shape,Get_OriginalWidth,ShapePos.X','cominvk  Shape,Get_OriginalHeight,ShapePos.Y']:
  s=replace(s,call,call+'\n                              test eax,eax\n                              js .BadCorel')
+s=replace(s,'cominvk  Selection,Get_FirstShape,Shape','cmp [Selection],0\n                              je .BadCorel\n                              cominvk  Selection,Get_FirstShape,Shape')
+s=replace(s,'cominvk  Shape,GetSize,ShapeSize.Width,ShapeSize.Height','cmp [Shape],0\n                              je .BadCorel\n                              cominvk  Shape,GetSize,ShapeSize.Width,ShapeSize.Height')
 s=replace(s,'                              movapd   xmm0,[ShapeSize]', '''                              pxor xmm0,xmm0
                               comisd xmm0,[ShapePos.X]
                               jae .BadCorel
@@ -171,6 +183,12 @@ s=replace(s,'                              movapd   xmm0,[ShapeSize]', '''      
                               jae .BadCorel
                               movapd   xmm0,[ShapeSize]''')
 s=replace(s,'                              cominvk  Selection,Release\n                              call', '                              cominvk  Selection,Release\n                              mov [Selection],0\n                              call')
+for call in ['cominvk  Shape,GetPosition,ShapePos.X,ShapePos.Y','cominvk  Shape,SetSize,float xmm1,float xmm2','cominvk  CorelApp,Get_ActiveLayer,Layer','cominvk  Layer,CreateRectangle2,float[ShapePos.X],float xmm2,float[ShapeSize.Width],float[ShapeSize.Height],0,0,0,0,Rectangle','cominvk  Rectangle,Get_Outline,Outline','cominvk  Outline,SetNoOutline','cominvk  Shape,AddToPowerClip,[Rectangle],0']:
+ s=replace(s,call,call+'\n                                test eax,eax\n                                js .BadCorel')
+for obj,call in [('Layer','cominvk  Layer,CreateRectangle2'),('Rectangle','cominvk  Rectangle,Get_Outline'),('Outline','cominvk  Outline,SetNoOutline')]:
+ s=replace(s,call,f'cmp [{obj}],0\n                                je .BadCorel\n                                '+call)
+for obj in ['Outline','Rectangle','Layer']:
+ s=replace(s,f'cominvk  {obj},Release',f'cominvk  {obj},Release\n                                mov [{obj}],0')
 s=replace(s,'                              cominvk  Shape,Release\n                              cominvk  CorelApp,Release','                              call ReleaseCorel27')
 s=replace(s,'                            .exit:\n                            xor', '''                            .exit:
                             mov rsi,[output.Data]
@@ -187,6 +205,7 @@ s=replace(s,'                            .exit:\n                            xor
                             jne .CopyOutputRow
                             xor''')
 s=replace(s,'.filterSelectorPrepare:mov  eax,1','.filterSelectorPrepare:cmp qword[rbp+FilterRecord.platformData],0\n                            je .BadRecord\n                            mov  eax,1')
+s=replace(s,'cmp  ecx,110000010001000001000000011b\n                            je @f','cmp  ecx,110000010001000001000000011b\n                            je @f\n                            jmp .filterError')
 s=replace(s,'               .filterError:invoke', '''                 .BadRecord:mov rax,errBounds27
                             jmp .filterError
                   .BadCorel:mov rax,errSecondInstance
@@ -206,6 +225,21 @@ s=replace(s,'''.filterSelectorFinish:invoke TerminateThread,[CarvingThread],0
                               invoke VirtualFree,[CarvingData],0,MEM_RELEASE
                               mov [CarvingData],0''')
 s=replace(s,'proc ShowFilterDialog', '''proc ReleaseCorel27
+  cmp [Outline],0
+  je @f
+    cominvk Outline,Release
+    mov [Outline],0
+  @@:
+  cmp [Rectangle],0
+  je @f
+    cominvk Rectangle,Release
+    mov [Rectangle],0
+  @@:
+  cmp [Layer],0
+  je @f
+    cominvk Layer,Release
+    mov [Layer],0
+  @@:
   cmp [Selection],0
   je @f
     cominvk Selection,Release

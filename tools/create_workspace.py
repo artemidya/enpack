@@ -73,8 +73,20 @@ def additions(newline):
     return reference, definition
 
 
+def insertion_fragments(newline, add_items_container=False):
+    reference, definition = additions(newline)
+    if add_items_container:
+        # Some genuine exports (including New_export.cdws) have no custom
+        # commands yet, hence no <items> section at all. Add it, never borrow
+        # a section from another workspace or rewrite the existing root.
+        definition = newline.encode() + b'  <items>' + definition + b'  </items>' + newline.encode()
+    return reference, definition
+
+
 def add_button(xml):
     root = parse_xml(xml)
+    if root.tag != 'uiConfig':
+        raise ValueError('Expected a uiConfig root')
     info = root.find('applicationInfo')
     if info is None or info.get('name') != 'CorelDRAW' or info.get('version') != '27':
         raise ValueError('Expected a CorelDRAW 27 workspace')
@@ -82,7 +94,14 @@ def add_button(xml):
         raise ValueError('DirectEnpack already present; refusing to duplicate/merge')
     if any(n.get('guid') in (BUTTON_ID, ICON_ID) for n in root.iter()):
         raise ValueError('Generated ID collision')
-    reference, definition = additions('\r\n' if b'\r\n' in xml else '\n')
+    items = root.findall('items')
+    if len(items) > 1:
+        raise ValueError('Ambiguous items containers')
+    add_items_container = not items
+    anchor = b'</uiConfig>' if add_items_container else b'</items>'
+    if xml.count(anchor) != 1 or (add_items_container and any(n.tag == 'items' for n in root.iter())):
+        raise ValueError('Ambiguous, nested or self-closing items/root container')
+    reference, definition = insertion_fragments('\r\n' if b'\r\n' in xml else '\n', add_items_container)
     matches = []
     for match in re.finditer(rb'<commandBarData\b[^>]*>.*?</commandBarData>', xml, re.S):
         element = ET.fromstring(match.group())
@@ -90,14 +109,16 @@ def add_button(xml):
             if len(element.findall('toolbar')) != 1 or match.group().count(b'</toolbar>') != 1:
                 raise ValueError('Expected one existing Standard toolbar')
             matches.append(match)
-    if len(matches) != 1 or xml.count(b'</items>') != 1:
-        raise ValueError('Ambiguous or missing toolbar/items container')
+    if len(matches) != 1:
+        raise ValueError('Ambiguous or missing Standard toolbar')
     match = matches[0]
     index = match.start() + match.group().index(b'</toolbar>')
     result = xml[:index] + reference + xml[index:]
-    result = result.replace(b'</items>', definition + b'</items>', 1)
+    result = result.replace(anchor, definition + anchor, 1)
     parsed = parse_xml(result)
+    assert len(parsed.findall('items')) == 1
     assert len([n for n in parsed.iter('itemData') if n.get('dynamicCommand') == 'DirectEnpack']) == 1
+    assert len([n for n in parsed.iter('item') if n.get('guidRef') == BUTTON_ID]) == 1
     if result.replace(reference, b'', 1).replace(definition, b'', 1) != xml:
         raise ValueError('Original XML preservation check failed')
     return result
@@ -126,10 +147,16 @@ def create_workspace(source, output):
                 target.comment = original.comment
                 for entry in entries:
                     data = modified if entry.filename == XML_PATH else original.read(entry)
-                    target.writestr(copy.copy(entry), data)
+                    info = copy.copy(entry)
+                    target.writestr(info, data)
+                    # zipfile replaces a valid zero external_attr with Unix 0600.
+                    # Restore it before writing the central directory on close.
+                    info.external_attr = entry.external_attr
                 icon_info = zipfile.ZipInfo(ICON_PATH, (2026, 10, 8, 0, 0, 0))
                 icon_info.compress_type = zipfile.ZIP_DEFLATED
+                icon_info.create_system = original.getinfo(XML_PATH).create_system
                 target.writestr(icon_info, icon)
+                icon_info.external_attr = original.getinfo(XML_PATH).external_attr
         except BaseException:
             output.unlink(missing_ok=True)
             raise
@@ -149,6 +176,7 @@ def create_workspace(source, output):
             'output_sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
             'button_id': BUTTON_ID, 'toolbar_id': STANDARD_BAR, 'icon_path': ICON_PATH,
             'original_members': len(entries), 'unchanged_members': len(entries) - 1,
+            'items_container_added': parse_xml(xml).find('items') is None,
             'xml_change': 'two insertions only; removing them recovers original XML bytes',
             'icon': 'original 16x16 silhouette, normalized to 32-bit BGRA with alpha',
             'runtime_tested_in_coreldraw': False}

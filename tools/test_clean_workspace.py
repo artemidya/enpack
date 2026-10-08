@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from create_workspace import (add_button, additions, create_workspace, original_pixels,
-                              rgba_icon, BUTTON_ID, ICON_PATH, STANDARD_BAR, XML_PATH, ROOT)
+                              rgba_icon, insertion_fragments, BUTTON_ID, ICON_PATH, STANDARD_BAR, XML_PATH, ROOT)
 
 
 class CleanWorkspaceTests(unittest.TestCase):
@@ -29,6 +29,38 @@ class CleanWorkspaceTests(unittest.TestCase):
         root = ET.fromstring(modified)
         self.assertEqual(root.find(f'./commandBars/commandBarData/toolbar/item[@guidRef="{BUTTON_ID}"]').get('guidRef'), BUTTON_ID)
         self.assertEqual(ET.tostring(root.find('states')), ET.tostring(ET.fromstring(xml).find('states')))
+
+    def test_missing_items_section_is_created_without_rewriting_existing_xml(self):
+        xml = self.xml()
+        start, end = xml.index(b'<items>'), xml.index(b'</items>') + len(b'</items>')
+        xml = xml[:start] + xml[end:]
+        addon = b'<Addons><new_element installFile="C:\\Corel\\userdraw.xslt"/></Addons>'
+        xml = xml.replace(b'</uiConfig>', addon + b'</uiConfig>')
+        modified = add_button(xml)
+        reference, definition = insertion_fragments('\r\n', True)
+        self.assertEqual(modified.replace(reference, b'', 1).replace(definition, b'', 1), xml)
+        self.assertIn(addon, modified)
+        root = ET.fromstring(modified)
+        self.assertEqual(len(root.findall('items')), 1)
+        self.assertEqual(len(root.findall('./items/itemData')), 1)
+        with self.assertRaises(ValueError):
+            add_button(modified)
+
+    def test_missing_items_with_lf_export(self):
+        xml = self.xml()
+        start, end = xml.index(b'<items>'), xml.index(b'</items>') + len(b'</items>')
+        xml = (xml[:start] + xml[end:]).replace(b'\r\n', b'\n')
+        modified = add_button(xml)
+        reference, definition = insertion_fragments('\n', True)
+        self.assertEqual(modified.replace(reference, b'', 1).replace(definition, b'', 1), xml)
+
+    def test_nested_or_duplicate_items_sections_are_rejected(self):
+        xml = self.xml()
+        cases = [xml.replace(b'<items>', b'<items></items><items>'),
+                 xml.replace(b'<items>', b'<container><items>').replace(b'</items>', b'</items></container>')]
+        for case in cases:
+            with self.assertRaises(ValueError):
+                add_button(case)
 
     def test_refuses_duplicate_command(self):
         with self.assertRaises(ValueError):

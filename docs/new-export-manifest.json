@@ -1,0 +1,134 @@
+{
+  "source": "New_export.cdws",
+  "output": "New_export-DirectEnpack.cdws",
+  "source_members": {
+    "mimetype": {
+      "sha256": "049cf7b00798e07b44c40a3c279451924ed66e362b5b219744e4812ea1b6065b",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 0,
+      "external_attr": 0
+    },
+    "content/exportsettings.xml": {
+      "sha256": "309fd372d44b5a369ec0e578ee30d85c940565bfa23f1c2249751599eb9fe7d7",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 8,
+      "external_attr": 0
+    },
+    "META-INF/metadata.xml": {
+      "sha256": "a742923d659ce5acfeb2493d7caa7ea33ed70f71d3cf8930f2a7c6f2603d60b3",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 8,
+      "external_attr": 0
+    },
+    "META-INF/links.xml": {
+      "sha256": "82fa176d3135d85af874dbf34339848dd8f82fc0bccbfb3d20f1ffd1bb07641a",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 8,
+      "external_attr": 0
+    },
+    "META-INF/container.xml": {
+      "sha256": "762b5c391e858ae4ddaa17816af632a86a4078c13c73ef9f4060bb0d530102d5",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 8,
+      "external_attr": 0
+    },
+    "content/cmyk.cdt": {
+      "sha256": "76b545d2b223a05575795f8ad4a5153f0e9444452cb9146e1ac2b2e2d51c6a7a",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 8,
+      "external_attr": 0
+    },
+    "content/settings.ini": {
+      "sha256": "dd800aba279317fa4f66fe85786cde6a770b1614b19991fbd07d4efebf30c52c",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 8,
+      "external_attr": 0
+    },
+    "content/workspace.xml": {
+      "sha256": "9a566e3ca2daa06d18a2b42ba946c4913bd1df1f4316841a3d1ce88db1a1b27c",
+      "date_time": [
+        2026,
+        10,
+        8,
+        14,
+        11,
+        56
+      ],
+      "compress_type": 8,
+      "external_attr": 0
+    },
+    "previews/thumbnail.jpg": {
+      "sha256": "094a0de85f447c763aa5936f44c6d1b350588477fe35f87f355d134582befba1",
+      "date_time": [
+        2026,
+        10,
+        8,
+        13,
+        53,
+        44
+      ],
+      "compress_type": 0,
+      "external_attr": 0
+    }
+  },
+  "source_sha256": "5e183c5915ba41231ff2d322ad26b0e9b34cbdd6e87e7382a2d82c90b951d171",
+  "output_sha256": "ac65dc5d26ecfab37f9f16b1adf809538ddff5f35e1a4ac6169afa95f1fb633b",
+  "button_id": "ba70843c-db63-5679-9f42-b95a3de10cee",
+  "toolbar_id": "c2b44f69-6dec-444e-a37e-5dbf7ff43dae",
+  "icon_path": "content/icons/b05da318-a34d-5236-a33a-46e2c5b76ea2.ico",
+  "original_members": 9,
+  "unchanged_members": 8,
+  "items_container_added": true,
+  "xml_change": "two insertions only; removing them recovers original XML bytes",
+  "icon": "original 16x16 silhouette, normalized to 32-bit BGRA with alpha",
+  "runtime_tested_in_coreldraw": false
+}

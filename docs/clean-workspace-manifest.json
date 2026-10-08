@@ -1,0 +1,229 @@
+[
+  {
+    "source": "lite.cdws",
+    "output": "Lite-DirectEnpack.cdws",
+    "source_members": {
+      "mimetype": {
+        "sha256": "049cf7b00798e07b44c40a3c279451924ed66e362b5b219744e4812ea1b6065b",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 0,
+        "external_attr": 2176188416
+      },
+      "META-INF/container.xml": {
+        "sha256": "9e21bee21789e608327f93cab651757051bb1fab541bd3236fa4a95a3a5ed4ad",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "META-INF/links.xml": {
+        "sha256": "82fa176d3135d85af874dbf34339848dd8f82fc0bccbfb3d20f1ffd1bb07641a",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "META-INF/metadata.xml": {
+        "sha256": "9fef5dbd8cfcc97e35232fea6289c5057604c572ec1f9a7b28f7efbccc2bfca0",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "content/settings.ini": {
+        "sha256": "4b7b8087b25f4e07744d451af86b989f43c78ec0160e2dd6530ce3ba862f9aa3",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "content/workspace.xml": {
+        "sha256": "9fdbbc7964816c597fd2333f578ee79d0c21b0d041d7f67438e66ffcdae5505d",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "previews/thumbnail.jpg": {
+        "sha256": "a58ef5ca02dba10c2d2a9e939cba9f8e9e9571af207e2abb29b7b7eea01554a3",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      }
+    },
+    "source_sha256": "c00cb478dac556acda889acc3475b15adac67e431fe99a98a8829b598c04a14b",
+    "output_sha256": "b729a1e19bc067800ae20b36f1faa7dd622e554ff812528d1161a7a2b46c7e4a",
+    "button_id": "ba70843c-db63-5679-9f42-b95a3de10cee",
+    "toolbar_id": "c2b44f69-6dec-444e-a37e-5dbf7ff43dae",
+    "icon_path": "content/icons/b05da318-a34d-5236-a33a-46e2c5b76ea2.ico",
+    "original_members": 7,
+    "unchanged_members": 6,
+    "xml_change": "two insertions only; removing them recovers original XML bytes",
+    "icon": "original 16x16 silhouette, normalized to 32-bit BGRA with alpha",
+    "runtime_tested_in_coreldraw": false
+  },
+  {
+    "source": "Default(TM).cdws",
+    "output": "Touch-DirectEnpack.cdws",
+    "source_members": {
+      "mimetype": {
+        "sha256": "049cf7b00798e07b44c40a3c279451924ed66e362b5b219744e4812ea1b6065b",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 0,
+        "external_attr": 2176188416
+      },
+      "META-INF/container.xml": {
+        "sha256": "8efbd9b958ee53204c26078a245e7af2ba648bd0354c130150252a96d2cf75c0",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "META-INF/links.xml": {
+        "sha256": "82fa176d3135d85af874dbf34339848dd8f82fc0bccbfb3d20f1ffd1bb07641a",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "META-INF/metadata.xml": {
+        "sha256": "b762d72a9a35851bb0df54a3da684da43cf98512e0a049699f9efdf55fc1da12",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "META-INF/touch-info.xml": {
+        "sha256": "081c6cbcda683aa41dab01b150cef1073bcccc32e9eb9b64163578171ca0abef",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "content/settings.ini": {
+        "sha256": "f230585432e3687210e2d1b728bb677ae6c70fddd16af44763955c7652956aaf",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "content/workspace.xml": {
+        "sha256": "2d2523b4d2792ae5d87af622b1cd87fc40d4263f00b5e9619ea376ab8d414e88",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      },
+      "previews/thumbnail.png": {
+        "sha256": "2da8382a8169ccd89bec11e34fc37877fd88215434fcd4a66e2e863a5253ce4e",
+        "date_time": [
+          2026,
+          8,
+          26,
+          21,
+          57,
+          38
+        ],
+        "compress_type": 8,
+        "external_attr": 2176188416
+      }
+    },
+    "source_sha256": "4e5693ba6266c131a7ea4e943b3e51ffa2dfe346ad16e4f7d7e90020dc967052",
+    "output_sha256": "939e641103bfa342e4daab34c430d46640b6119543bab480781da5b3d159abd4",
+    "button_id": "ba70843c-db63-5679-9f42-b95a3de10cee",
+    "toolbar_id": "c2b44f69-6dec-444e-a37e-5dbf7ff43dae",
+    "icon_path": "content/icons/b05da318-a34d-5236-a33a-46e2c5b76ea2.ico",
+    "original_members": 8,
+    "unchanged_members": 7,
+    "xml_change": "two insertions only; removing them recovers original XML bytes",
+    "icon": "original 16x16 silhouette, normalized to 32-bit BGRA with alpha",
+    "runtime_tested_in_coreldraw": false
+  }
+]

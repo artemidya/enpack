@@ -1,0 +1,25 @@
+name: Workspace and monitor validation
+on:
+  push:
+    branches: ['arena/4cf01c57-enpack']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Workspace and source tests
+        shell: powershell
+        run: |
+          python tools/test_source.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/test_workspace_icon.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/test_clean_workspace.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: PowerShell 5.1 and Win32 smoke tests (no CorelDRAW)
+        shell: powershell
+        run: ./tools/test_corelwatch_windows.ps1

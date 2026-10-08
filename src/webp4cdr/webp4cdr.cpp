@@ -50,13 +50,15 @@ bool filesFrom(IDataObject* object,std::vector<std::wstring>& paths) {
  paths.clear();
  FORMATETC f={CF_HDROP,nullptr,DVASPECT_CONTENT,-1,TYMED_HGLOBAL}; STGMEDIUM m{};
  if(FAILED(object->GetData(&f,&m)))return false;
- if(m.tymed!=TYMED_HGLOBAL || !m.hGlobal){ReleaseStgMedium(&m);return false;}
+ // Also release the medium if a path/vector allocation throws.
+ std::unique_ptr<STGMEDIUM,decltype(&ReleaseStgMedium)> lease(&m,ReleaseStgMedium);
+ if(m.tymed!=TYMED_HGLOBAL || !m.hGlobal)return false;
  HDROP drop=static_cast<HDROP>(m.hGlobal); UINT count=DragQueryFileW(drop,0xFFFFFFFF,nullptr,0);
  bool ok=count>0 && count<=4096;
  for(UINT i=0;ok && i<count;++i){UINT n=DragQueryFileW(drop,i,nullptr,0);if(!n || n>32760){ok=false;break;}
   std::vector<wchar_t> b(n+1);if(DragQueryFileW(drop,i,b.data(),n+1)!=n){ok=false;break;}paths.emplace_back(b.data());}
  // CF_HDROP belongs to STGMEDIUM: ReleaseStgMedium exactly once, NEVER DragFinish.
- ReleaseStgMedium(&m);return ok;
+ return ok;
 }
 struct Handle {HANDLE h=INVALID_HANDLE_VALUE;~Handle(){if(h!=INVALID_HANDLE_VALUE)CloseHandle(h);}};
 bool temporaryName(std::wstring& path) {
@@ -206,7 +208,10 @@ HRESULT restoreOnThread(HWND hwnd) {
  Target* proxy=nullptr;{std::lock_guard<std::mutex> g(targetsLock);auto it=targets.find(hwnd);if(it==targets.end())return S_FALSE;proxy=it->second;}
  // Do not revoke a different add-on's handler installed after ours.
  if(GetPropW(hwnd,L"OleDropTargetInterface")!=static_cast<IDropTarget*>(proxy))return S_FALSE;
- HRESULT hr=RevokeDragDrop(hwnd);if(SUCCEEDED(hr))hr=RegisterDragDrop(hwnd,proxy->original);
+ HRESULT hr=RevokeDragDrop(hwnd);if(SUCCEEDED(hr)){
+  hr=RegisterDragDrop(hwnd,proxy->original);
+  if(FAILED(hr))RegisterDragDrop(hwnd,proxy); // Disabled proxy still forwards native drops.
+ }
  if(SUCCEEDED(hr)){
   RemovePropW(hwnd,IdentityProperty);
   {std::lock_guard<std::mutex> g(targetsLock);targets.erase(hwnd);}proxy->Release();

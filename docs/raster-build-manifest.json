@@ -20,7 +20,7 @@
   ],
   "sha256": {
     "Addons/Bleedsx64.cpg": "1b9a93b288b0167f086a636dbc8c9dfab149c7d735cfa468912e3176ee4f82d2",
-    "Addons/WEBP4CDRx64.cpg": "97fb043937058d7e86cfcb378da3616508ed65d9f920c976f28f8370ad9c7f51",
+    "Addons/WEBP4CDRx64.cpg": "a6d56c3167e7eade20822429c8c49beee92da0222d95fc86cb17d820d08e719c",
     "Plugins/SC_x64.8bf": "76f6251146925789a3491d023c45d718c22d063a785e7cf983e0b49804c8b395",
     "README-RU.md": "cd86500e4dab4e90402b051698f403e6f2f472c14aee0118491826e0b1dd4f0d",
     "Workspace/New_export-DirectEnpack-SmartDepart-Bleeds.cdws": "02c77de464013cdcb5fc3f3f632c673afe83b9723d3fca3285e0963448197e29",
@@ -46,7 +46,7 @@
     "sources/adapted/seamcarving/x64/Photoshop.inc": "502e164e891b7c64ee9fb75678e223bb2ba4899dc394ed2cbf3287ba24a5aa3e",
     "sources/adapted/seamcarving/x64/SC_x64.asm": "a27a8e07d09c8251fa1283aafada6a201139c69a1a778aa35af9751e5706067f",
     "sources/adapted/webp4cdr/CMakeLists.txt": "4866f24d616c186f75ebcaafb1cee3a027dcac1e61155926efad07d364c26fa7",
-    "sources/adapted/webp4cdr/webp4cdr.cpp": "06080e5368ba5125246262e7c484ffccdbed73b80fe703e4bf72487bcbb79e00",
+    "sources/adapted/webp4cdr/webp4cdr.cpp": "3b4eade0ff1245facb0504ebd7fb69d52980f5850a439d8ebf39ec4bb0a00325",
     "sources/upstream/Bleeds/.gitattributes": "a82bc7aeb51e613a9c5d7c62c722f2bc8d499ea30c7527564b00728d73770b1c",
     "sources/upstream/Bleeds/LICENSE": "6b0382b16279f26ff69014300541967a356a666eb0b91b422f6862f6b7dad17e",
     "sources/upstream/Bleeds/Readme.md": "11dfb2881f41cc13e2b72abffccf495828bcebfa27623a078bb957ea03580d3b",
